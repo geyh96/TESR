@@ -8,6 +8,6 @@ Yeheng GE*, Xueyu ZHOU*, Jian HUANG.  Transfer Learning through Enhanced Suffici
 
 
 ## Development
-The code repository is released by Xueyu ZHOU(xueyu.zhou@connect.polyu.hk)and Yeheng GE(geyh96@foxmail.com) for replication of the numerical results in the manuscript.
+The code repository is released by Xueyu ZHOU(xueyu.zhou@connect.polyu.hk) and Yeheng GE(geyh96@foxmail.com) for replication of the numerical results in the manuscript.
 
 The project is from the Prof. HUANG's research group in PolyU, Hong Kong.
