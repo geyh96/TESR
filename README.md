@@ -1,5 +1,5 @@
 # TESR
-Code for the manuscripts ``Transfer Learning through Enhanced Sufficient Representation:  Enriching Source Domain Knowledge with Target Data''
+Code for the manuscript ``Transfer Learning through Enhanced Sufficient Representation:  Enriching Source Domain Knowledge with Target Data''
 
 
 
