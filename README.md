@@ -2,8 +2,11 @@
 Code for the manuscript ``Transfer Learning through Enhanced Sufficient Representation:  Enriching Source Domain Knowledge with Target Data''
 
 
-## Structures
-????
+## Structure
+- Folder 1: For Fig xxx
+  - xxx.R
+  - xxx.source (写出来重要的几个文件即可）
+- Folder 2: Code of Fig xxx
 
 
 
