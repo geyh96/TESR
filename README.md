@@ -9,10 +9,14 @@ conda create -n TESR python=3.9.16 -y
 ```
 
 #### Activate
+```
 conda activate TESR
+```
 
 #### Install dependencies
+```
 pip install -r requirements.txt
+```
 
 ## Structure
 - Folder 1: For Fig xxx
