@@ -6,7 +6,7 @@ This section describes how to set up the environment and install all required pa
 #### Create environment
 ```
 conda create -n TESR python=3.9.16 -y
-’‘’
+'''
 
 #### Activate
 conda activate TESR
