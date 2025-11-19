@@ -20,14 +20,15 @@ pip install -r requirements.txt
 
 # Structure
 ## Simulations
-├── Fig1/          # Code for Figure 1 in the paper
-├── Fig2/          # Code for Figure 2 in the paper
-├── Fig3/          # Code for Figure 3 in the paper
-├── FigS1/         # Code for Supplementary Figure S1
-├── FigS2/         # Code for Supplementary Figure S2
-├── FigS3/         # Code for Supplementary Figure S3
-├── FigS4/         # Code for Supplementary Figure S4
-└── Table1/        # Code for Table 1 in the paper
+├── Fig1/          # Code for Figure 1 in the paper           
+├── Fig2/          # Code for Figure 2 in the paper            
+├── Fig3/          # Code for Figure 3 in the paper              
+├── FigS1/         # Code for Supplementary Figure S1        
+├── FigS2/         # Code for Supplementary Figure S2          
+├── FigS3/         # Code for Supplementary Figure S3           
+├── FigS4/         # Code for Supplementary Figure S4            
+└── Table1/        # Code for Table 1 in the paper        
+
 ## Folder Contents
 
 Each folder contains the following files and subdirectories:
