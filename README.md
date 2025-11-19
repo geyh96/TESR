@@ -54,7 +54,7 @@ Each folder contains the following files and subdirectories:
 
 # Reference
 Yeheng GE*, Xueyu ZHOU*, Jian HUANG.  Transfer Learning through Enhanced Sufficient Representation:  Enriching Source Domain Knowledge with Target Data. Manuscript. (* denotes co-first authorship)
-
+arXiv: https://arxiv.org/abs/2502.20414
 
 # Development
 The code repository is released by Xueyu ZHOU(xueyu.zhou@connect.polyu.hk) and Yeheng GE(geyh96@foxmail.com) for replication of the numerical results in the manuscript.
