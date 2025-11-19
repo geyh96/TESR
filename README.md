@@ -19,7 +19,7 @@ pip install -r requirements.txt
 ```
 
 # Structure
-## Simulations/
+## Simulations
 ├── Fig1/          # Code for Figure 1 in the paper
 ├── Fig2/          # Code for Figure 2 in the paper
 ├── Fig3/          # Code for Figure 3 in the paper
