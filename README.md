@@ -20,7 +20,9 @@ pip install -r requirements.txt
 
 # Structure
 ## Simulations
-├── Fig1/          # Code for Figure 1 in the paper           
+├── Fig1/          # Code for Figure 1 in the paper 
+│ ├── Case_Cor.py # Code to reproduce the experiment
+│ └── ARrun.sh/ARrun1.sh # Master script to run all experiments
 ├── Fig2/          # Code for Figure 2 in the paper            
 ├── Fig3/          # Code for Figure 3 in the paper              
 ├── FigS1/         # Code for Supplementary Experiment S1        
@@ -48,9 +50,7 @@ Each folder contains the following files and subdirectories:
 - `AMARun_ama.sh` - Master script to run all experiments
 
 
-### Core Files in Each SubFolder
-- `Case_Cor.py` - Code to reproduce the experiment
-- `ARrun.sh/ARrun1.sh` - Master script to run all experiments for this method.
+
 
 # Reference
 Yeheng GE*, Xueyu ZHOU*, Jian HUANG.  Transfer Learning through Enhanced Sufficient Representation:  Enriching Source Domain Knowledge with Target Data. Manuscript. 
