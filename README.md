@@ -20,9 +20,9 @@ pip install -r requirements.txt
 
 # Structure
 ## Simulations
-├── Fig1/          # Code for Figure 1 in the paper 
-│ ├── Case_Cor.py # Code to reproduce the experiment
-│ └── ARrun.sh/ARrun1.sh # Master script to run all experiments
+├── Fig1/          # Code for Figure 1 in the paper              
+│ ├── Case_Cor.py # Code to reproduce the experiment                 
+│ └── ARrun.sh/ARrun1.sh # Master script to run all experiments                      
 ├── Fig2/          # Code for Figure 2 in the paper            
 ├── Fig3/          # Code for Figure 3 in the paper              
 ├── FigS1/         # Code for Supplementary Experiment S1        
