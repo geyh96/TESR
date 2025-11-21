@@ -5,7 +5,7 @@ Code for the manuscript ``Transfer Learning through Enhanced Sufficient Represen
 This section describes how to set up the environment and install all required packages for running the project.
 #### Create environment
 ```
-conda create -n TESR python=3.11.6 -y
+conda create -n TESR python=3.11 -y
 ```
 
 #### Activate
