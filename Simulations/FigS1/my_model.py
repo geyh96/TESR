@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 
 def to_onehot(target):
-    # change the target to one-hot version
+
     Y = np.ravel(target.numpy()).astype(int)
     Y_train = np.zeros((Y.shape[0], Y.max()-Y.min()+1))
     Y_train[np.arange(Y.size), Y-Y.min()] = 1
@@ -36,8 +36,7 @@ class Generator(nn.Module):
             nn.Linear(xdim, 64),
             nn.LeakyReLU(0.2),
             nn.Linear(64, 32),
-            # nn.LeakyReLU(0.2),
-            # nn.Linear(32, 16),
+
             nn.LeakyReLU(0.2),
             nn.Linear(32, ndim),
         )

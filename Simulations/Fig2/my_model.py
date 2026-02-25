@@ -5,7 +5,7 @@ import numpy as np
 
 
 def to_onehot(target):
-    # change the target to one-hot version
+
     Y = np.ravel(target.numpy()).astype(int)
     Y_train = np.zeros((Y.shape[0], Y.max()-Y.min()+1))
     Y_train[np.arange(Y.size), Y-Y.min()] = 1
@@ -70,3 +70,4 @@ class pred_from_Rx(nn.Module):
     def forward(self, X):
         out = self.fc(X)
         return out
+

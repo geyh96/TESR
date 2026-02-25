@@ -1,4 +1,4 @@
-###Regression2 Model(a)
+
 import os
 import sys
 import numpy as np
@@ -7,8 +7,8 @@ from torch.autograd import grad
 
 def mkdir(path):
     folder = os.path.exists(path)
-    if not folder: #判断是否存在文件夹如果不存在则创建为文件夹
-        os.makedirs(path) #makedirs 创建文件时如果路径不存在会创建这个路径
+    if not folder:
+        os.makedirs(path) 
         print("Done folder") 
     else:
         print("Folder Already")
@@ -30,7 +30,7 @@ parser.add_argument('--iloop', type=int, default=7)
 parser.add_argument('--NSource', type=int, default=1000)
 parser.add_argument('--NTarget', type=int, default=200)
 parser.add_argument('--P', type=int, default=20)
-# parser.add_argument('--igroup', type=int, default=0)
+
 line_args = parser.parse_args()
 idx_data = line_args.iloop
 NSource = line_args.NSource
@@ -46,8 +46,7 @@ args = class_args()
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
-# NSource = args.NSource
-# NTarget = args.NTarget
+
 NSval= int(NSource * The_val_ratio)
 
 NTval = int(NTarget * The_val_ratio)
@@ -73,7 +72,7 @@ The_DATA_MARK = "idata_" + str(idx_data) + "_NS_" + str(NSource) + "_NT_" + str(
 
 mkdir("./result")
 mkdir("./model")
-# igroup = line_args.igroup
+
 print("is the cuda avalable {:1d}".format(torch.cuda.is_available()))
 
 

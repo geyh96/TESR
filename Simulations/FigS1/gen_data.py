@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.linalg import sqrtm
 import numpy as np
+import scipy
 
 
 def standardization(ddata):
@@ -8,18 +9,17 @@ def standardization(ddata):
     sigma = np.std(ddata, axis=0)
     return (ddata - mu) / sigma
 
-#idx_domain = 0 is the target dataset
 def Get_data_0101(n, P, s=1):
     Cov_z = np.eye(P)
     for k in range(P):
             for l in range(P):
                     Cov_z[k,l] = 0**(np.abs(k-l))
     sqrtCov_z = sqrtm(Cov_z)
-    # Z0 = np.random.randn(n,P)
+
     Z0 = np.random.rand(n,P)
     Z = Z0 @ sqrtCov_z
     X = Z
-    # X  =  2*(scipy.stats.norm.cdf(Z) - 0.5)
+
 
     logit_P = 0.5*(X[:,0] * X[:,1] - 0.7*np.sin((X[:,2]*X[:,3])*(X[:,4] - 0.2) ) - 1)
     Prob_1 = 1/(1+ np.exp(logit_P)**(-1))
@@ -48,7 +48,6 @@ def Get_data_0101(n, P, s=1):
     sigma = 0.5
     if s == 0:
         mu0 =  3*f0 + 1.5*f1*f2  + 2*f5
-        # eps = np.random.randn(n)
         eps0 = np.random.randn(n)   
         y0 = mu0  + sigma*eps0
         y0 = y0.reshape(-1,1)
@@ -68,7 +67,6 @@ def Get_data_0101(n, P, s=1):
 
     if s==4 or s==3:
         ss = s - 2
-        # mu1  = 3*f0 - 1.5*f1*f2  + ss*f4
         mu1  = 2*f0 + 1.5*f1*f2  + ss*f4
         eps1 = np.random.randn(n)
         y1 = mu1 + sigma*eps1
@@ -100,13 +98,12 @@ class class_args:
         self.latent_dim = 64
         self.save = "./model/"
         self.save_pickle = "./result/"
-        self.nEpochs = 150
-        self.nEpochs_pred = 150
+        self.nEpochs = 200
+        self.nEpochs_pred = 200
         self.batch_size = 64
         self.lr_R = 1*1e-3
         self.lr_D = 1*1e-3
         self.lr_pred = 1*1e-3
-        # self.cuda = True
         self.cuda = False
         self.lr_step = 100
         self.decayRate =0.5

@@ -1,4 +1,3 @@
-###Regression2 Model(a)
 import os
 import sys
 import numpy as np
@@ -7,18 +6,15 @@ import argparse
 
 def mkdir(path):
     folder = os.path.exists(path)
-    if not folder: #判断是否存在文件夹如果不存在则创建为文件夹
-        os.makedirs(path) #makedirs 创建文件时如果路径不存在会创建这个路径
+    if not folder: 
+        os.makedirs(path) 
         print("Done folder") 
     else:
         print("Folder Already")
 
-# torch functions
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-
 from torch.utils.data import DataLoader, Dataset
 
 sys.path.append("..") 
@@ -32,7 +28,6 @@ parser.add_argument('--iloop', type=int, default=7)
 parser.add_argument('--NSource', type=int, default=1000)
 parser.add_argument('--NTarget', type=int, default=200)
 parser.add_argument('--P', type=int, default=20)
-# parser.add_argument('--igroup', type=int, default=0)
 line_args = parser.parse_args()
 idx_data = line_args.iloop
 NSource = line_args.NSource
@@ -43,20 +38,13 @@ P = line_args.P
 
 from itertools import product
 args = class_args()
-
-
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
-# NSource = args.NSource
-# NTarget = args.NTarget
 NSval= int(NSource * The_val_ratio)
-
 NTval = int(NTarget * The_val_ratio)
 m = args.m
-
 ntest = NTest
-
 print((NSource,m,NTarget))
 
 
@@ -75,7 +63,6 @@ The_DATA_MARK = "idata_" + str(idx_data) + "_NS_" + str(NSource) + "_NT_" + str(
 
 mkdir("./result")
 mkdir("./model")
-# igroup = line_args.igroup
 print("is the cuda avalable {:1d}".format(torch.cuda.is_available()))
 
 
@@ -243,7 +230,7 @@ for ithres in range(nthres1):
     the_dataset_train = my_regDataset(X=XS,Rx=YS,Y=YS,weight=np.ones_like(YS[:,0])+ 1e-6,setidx=setidxS)
     the_dataset_val = my_regDataset(X=XSval,Rx=YSval,Y=YSval,weight=np.ones_like(YSval[:,0])+ 1e-6,setidx=setidxSval)
     Loader_train = DataLoader(the_dataset_train, batch_size=args.batch_size,shuffle=True)
-    Loader_val = DataLoader(the_dataset_val, batch_size=len(the_dataset_val),shuffle=False)
+    Loader_val = DataLoader(the_dataset_val, batch_size=args.batch_size,shuffle=False)
 
     epoch = 1
     for epoch in range(args.nEpochs):
@@ -267,18 +254,18 @@ for ithres in range(nthres1):
                 iim = im + 1
                 list_cclass.append((setidx==iim).float() +1e-6)
                 
-            cclass = torch.cat(list_cclass,dim=1)
-            inva_loss = DCloss(w, cclass.to(device))
+            
             ##################class neutral
             d_loss = 0
             if Loss == "MSE":
                 for im in range(m):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
-                    d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
-                    d_loss = d_loss + d_loss_iim
+                    if len(ind_iim)>0:
+                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss = d_loss + d_loss_iim
             
-            G_loss = lambda_Eloss * E_loss - d_loss + lambda_Iloss * inva_loss
+            G_loss = lambda_Eloss * E_loss - d_loss
             optimizer.zero_grad()
             G_loss.backward()
             optimizer.step()
@@ -316,10 +303,11 @@ for ithres in range(nthres1):
                         for im in range(m):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
-                            d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
-                            d_loss = d_loss + d_loss_iim
+                            if len(ind_iim)>0:
+                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss = d_loss + d_loss_iim
                     
-                    G_loss = lambda_Eloss * E_loss - d_loss + lambda_Iloss * inva_loss
+                    G_loss = lambda_Eloss * E_loss - d_loss
                     dCor_loss += G_loss.item()
             dCor_loss /= len(Loader_val)
             if epoch % 10==0:
@@ -428,7 +416,7 @@ optimizerT = optim.Adam(f1_pred_from_Rx.parameters(),lr=args.lr_R, weight_decay=
 the_dataset_train = my_regDataset(X=XT,Rx=YT,Y=YT,weight=np.ones_like(YT)+ 1e-6,setidx=setidxT)
 the_dataset_val = my_regDataset(X=XTval,Rx=YTval,Y=YTval,weight=np.ones_like(YTval)+ 1e-6,setidx=setidxTval)
 Loader_train = DataLoader(the_dataset_train, batch_size=args.batch_size,shuffle=True)
-Loader_val = DataLoader(the_dataset_val, batch_size=len(the_dataset_val),shuffle=False)
+Loader_val = DataLoader(the_dataset_val, batch_size=args.batch_size,shuffle=False)
 #########################################################################
 
 
@@ -493,3 +481,4 @@ with open(os.path.join(args.save_pickle,  "Result_" + The_DATA_MARK  + "_Model_"
     pickle.dump(
         res
         , handle, protocol=pickle.HIGHEST_PROTOCOL)
+

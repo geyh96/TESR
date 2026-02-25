@@ -7,9 +7,7 @@ def standardization(ddata):
     sigma = np.std(ddata, axis=0)
     return (ddata - mu) / sigma
 
-#idx_domain = 0 is the target dataset
-#power = 1
-#rotation = 1
+
 def Get_data_0101(n, P, s=1, is_power = 1, is_rotation = 0):
     Cov_z = np.eye(P)
     for k in range(P):
@@ -41,9 +39,9 @@ def Get_data_0101(n, P, s=1, is_power = 1, is_rotation = 0):
 
 
     if s == 0:
-        # mu0 =  2*f0 + 1*f1 + 1*f2  + 1*f5
+
         mu0 =  2*f0 + 1*f1 + 1*f2 + 1*f3
-        # eps = np.random.randn(n)
+
         y0 = mu0 - mu0.mean()
         y0 = y0.reshape(-1,1)
         y0 = y0.astype(np.float32)
@@ -115,13 +113,13 @@ class class_args:
         self.latent_dim = 64
         self.save = "./model/"
         self.save_pickle = "./result/"
-        self.nEpochs = 300
-        self.nEpochs_pred = 300
+        self.nEpochs = 200
+        self.nEpochs_pred = 200
         self.batch_size = 64
         self.lr_R = 1*1e-3
         self.lr_D = 1*1e-3
         self.lr_pred = 1*1e-3
-        # self.cuda = True
+
         self.cuda = False
         self.lr_step = 100
         self.decayRate =0.8

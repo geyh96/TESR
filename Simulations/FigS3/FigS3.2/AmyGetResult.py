@@ -1,13 +1,7 @@
-# The science + ieee styles for IEEE papers: It is readable with black-white color mode.
 import matplotlib
-# matplotlib.use("QtAgg")
 matplotlib.use("Agg")
-
 import matplotlib.pyplot as plt
-# import scienceplots
-# plt.style.use(['science',"nature"])
 import matplotlib.gridspec as gridspec
-###First we read the result for all the methods.
 import numpy as np
 import pandas as pd
 import os
@@ -54,9 +48,8 @@ def get_data(the_folder,dicts,method):
     dicts[method] = {"mean":all_means,"std":all_stds}
     return dicts
 colors= ['#FF0000','#66CDAA','#6495ED','#FFA07A','#BA55D3']
-methods = ["TESR","TESR_Uniform","TESR_NOGAUSSIAN"]
+methods = ["TESR","TESR_NOGAUSSIAN"]
 folders = [ "./Case_TESR/result/",
-            "./Case_TESR_Uniform/result/",
             "./Case_TESR_NOGaussian/result/",
         ]
 
@@ -64,17 +57,15 @@ line_fmt = ["o-","v--","*-.","+:"]
 
 
 dicts = {}
-for i in range(3):
+for i in range(2):
     dicts = get_data(folders[i],dicts,methods[i])
-# print(dicts['SVM'])
 fig = plt.figure(figsize=(24,16))
 gs = gridspec.GridSpec(3, 3,height_ratios=[1,1,0.1])
 axs = [plt.subplot(gs[i]) for i in range(6)]
-# fig, axs = plt.subplots(2, 3, figsize=(24,18))
 lines = []
 labels = []
 for i in range(3):
-    for j in range(3):
+    for j in range(2):
         P = list_P[i]
         NS = list_NS[0]
         means = dicts[methods[j]]["mean"][i]
@@ -115,11 +106,10 @@ list_P = [30,60,90]
 list_NS = [500,1000,1500,2000,2500]
 list_NT = [300]
 dicts = {}
-for i in range(3):
+for i in range(2):
     dicts = get_data1(folders[i],dicts,methods[i])
-# 调整子图布局
 for i in range(3):
-    for j in range(3):
+    for j in range(2):
         P = list_P[i]
         NT = list_NT[0]
         means = dicts[methods[j]]["mean"][i]
@@ -132,9 +122,8 @@ for i in range(3):
         axs[3+i].set_ylabel(r'MSE', fontsize=24)
         axs[3+i].grid(True,color = '#f0f0f0')  # 添加网格
         axs[3+i].set_facecolor('white')  # 设置背景色
-# plt.subplots_adjust(bottom=0.2)
+
 plt.figlegend(lines, labels, loc='lower center',bbox_to_anchor=(0.5, 0.02),ncol=5, prop={'size': 32})
-# plt.tight_layout(h_pad=2)
 plt.tight_layout()
-# plt.show()
 plt.savefig('Simulation_S3_2.pdf',dpi=500)
+

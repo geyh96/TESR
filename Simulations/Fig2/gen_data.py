@@ -8,7 +8,7 @@ def standardization(ddata):
     sigma = np.std(ddata, axis=0)
     return (ddata - mu) / sigma
 
-#idx_domain = 0 is the target dataset
+
 def Get_data_0101(n, P, s=1):
     Cov_z = np.eye(P)
     for k in range(P):
@@ -133,7 +133,7 @@ class class_args:
         self.save = "./model/"
         self.save_pickle = "./result/"
         self.nEpochs = 200
-        self.nEpochs_pred = 300
+        self.nEpochs_pred = 200
         self.batch_size = 64
         self.lr_R = 1*1e-3
         self.lr_D = 1*1e-3
