@@ -20,8 +20,6 @@ pip install -r requirements.txt
 
 ## Structure
 - Folder 1: For Fig xxx
-  - xxx.R
-  - xxx.source
 - Folder 2: Code of Fig xxx
 
 
