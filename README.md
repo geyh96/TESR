@@ -21,7 +21,7 @@ pip install -r requirements.txt
 ## Structure
 - Folder 1: For Fig xxx
   - xxx.R
-  - xxx.source (写出来重要的几个文件即可）
+  - xxx.source
 - Folder 2: Code of Fig xxx
 
 
