@@ -67,10 +67,3 @@ done
 
 wait
 echo "All Done!"
-
-echo 'move to real'
-cd /home/22118785r/medical_real_JAM2/Case_FT
-
-bash ARrun.sh
-
-echo 'All Real Done!'

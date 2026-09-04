@@ -1,4 +1,4 @@
-
+###TransIRM
 import os
 import sys
 import numpy as np
@@ -7,8 +7,8 @@ from torch.autograd import grad
 
 def mkdir(path):
     folder = os.path.exists(path)
-    if not folder: 
-        os.makedirs(path) 
+    if not folder: #判断是否存在文件夹如果不存在则创建为文件夹
+        os.makedirs(path) #makedirs 创建文件时如果路径不存在会创建这个路径
         print("Done folder") 
     else:
         print("Folder Already")
@@ -32,6 +32,7 @@ parser.add_argument('--iloop', type=int, default=1)
 parser.add_argument('--NSource', type=int, default=2000)
 parser.add_argument('--NTarget', type=int, default=100)
 parser.add_argument('--P', type=int, default=30)
+# parser.add_argument('--igroup', type=int, default=0)
 line_args = parser.parse_args()
 idx_data = line_args.iloop
 NSource = line_args.NSource
@@ -43,13 +44,15 @@ P = line_args.P
 from itertools import product
 args = class_args()
 
-
+#Only on target data
 args.latent_dim = args.latent_dim*2
 
 
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
+# NSource = args.NSource
+# NTarget = args.NTarget
 NSval= int(NSource * The_val_ratio)
 
 NTval = int(NTarget * The_val_ratio)
@@ -75,6 +78,7 @@ The_DATA_MARK = "idata_" + str(idx_data) + "_NS_" + str(NSource) + "_NT_" + str(
 
 mkdir("./result")
 mkdir("./model")
+# igroup = line_args.igroup
 print("is the cuda avalable {:1d}".format(torch.cuda.is_available()))
 
 
@@ -97,6 +101,7 @@ class my_regDataset(Dataset):
     
     def __getitem__(self, idx):
         X,Rx,Y,weight,setidx = self.X[idx], self.Rx[idx], self.Y[idx], self.weight[idx], self.setidx[idx]
+        # return torch.tensor(X),torch.tensor(Rx),torch.tensor(Y),torch.tensor(setidx)
         return X,Rx,Y,weight,setidx
 
     def __len__(self):
@@ -215,7 +220,7 @@ for ithres in range(nthres1):
     the_dataset_train = my_regDataset(X=XS ,Rx=YS,Y=YS,weight = np.ones_like(YS[:,0])+ 1e-6,setidx=setidxS)
     the_dataset_val = my_regDataset(X=XSval,Rx=YSval,Y=YSval,weight = np.ones_like(YS[:,0])+ 1e-6,setidx=setidxSval)
     Loader_train = DataLoader(the_dataset_train, batch_size=args.batch_size,shuffle=True)
-    Loader_val = DataLoader(the_dataset_val, batch_size=len(the_dataset_val),shuffle=False)
+    Loader_val = DataLoader(the_dataset_val, batch_size=args.batch_size,shuffle=False)
     epoch = 1
     # X,Rx,Y,weight, setidx = next(iter(Loader_train))
     for epoch in range(args.nEpochs):
@@ -321,7 +326,7 @@ for ithres in range(nthres):
     the_dataset_train = my_regDataset(X=XT,Rx=YT,Y=YT,weight=np.ones_like(YT[:,0])+ 1e-6,setidx=setidxT)
     the_dataset_val = my_regDataset(X=XTval,Rx=YTval,Y=YTval,weight=np.ones_like(YTval[:,0])+ 1e-6,setidx=setidxTval)
     Loader_train = DataLoader(the_dataset_train, batch_size=args.batch_size,shuffle=True)
-    Loader_val = DataLoader(the_dataset_val, batch_size=len(the_dataset_val),shuffle=False)
+    Loader_val = DataLoader(the_dataset_val, batch_size=args.batch_size,shuffle=False)
     #########################################################################
 
 

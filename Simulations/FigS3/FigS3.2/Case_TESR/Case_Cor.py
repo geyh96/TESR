@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import argparse
 
+
 def mkdir(path):
     folder = os.path.exists(path)
     if not folder: 
@@ -11,16 +12,18 @@ def mkdir(path):
     else:
         print("Folder Already")
 
-# torch functions
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
 sys.path.append("..") 
 from gen_data import *
 from my_model import *
 from my_energy import *
+from gmdd_loss import Loss_GMDC
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--iloop', type=int, default=7)
@@ -37,15 +40,15 @@ P = line_args.P
 
 from itertools import product
 args = class_args()
+
+
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
 NSval= int(NSource * The_val_ratio)
 NTval = int(NTarget * The_val_ratio)
 m = args.m
-
 ntest = NTest
-
 print((NSource,m,NTarget))
 
 
@@ -65,7 +68,6 @@ The_DATA_MARK = "idata_" + str(idx_data) + "_NS_" + str(NSource) + "_NT_" + str(
 mkdir("./result")
 mkdir("./model")
 print("is the cuda avalable {:1d}".format(torch.cuda.is_available()))
-
 
 
 
@@ -105,7 +107,6 @@ def Totensor(x, device):
 
 
 
-
 ########################################################################
 list_XS = []
 list_YS = []
@@ -121,7 +122,6 @@ for s in range(m):
     list_XS.append(Xss)
     list_YS.append(yss)
     list_setidxS.append(setidxss)
-
 
 
 
@@ -158,12 +158,6 @@ setidxSval = np.concatenate(list_setidxSval,axis=0)
 
 
 ##########################################################
-##########################################################
-##########################################################
-##########################################################
-##########################################################
-##########################################################
-##########################################################
 if 0:
     s = 0
     DataT_train = Get_data_0101(NTarget,P,s=0)
@@ -187,6 +181,7 @@ if 0:
     setidxtest = np.ones_like(YTtest)*s
 
 #############################################################################
+
 
 
 if args.cuda:
@@ -216,7 +211,7 @@ for ithres in range(nthres1):
     print("ithres:{:4f}".format(ithres))
     dCorloss_best = 1e5
     loss_best = 1e5
-    
+
     lambda_Iloss = 1
     lambda_Eloss = 1
 
@@ -228,8 +223,7 @@ for ithres in range(nthres1):
 
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-
-
+    GMDCloss = Loss_GMDC()
     #########################################################################
     #########################################################################
     the_dataset_train = my_regDataset(X=XS,Rx=YS,Y=YS,weight=np.ones_like(YS[:,0])+ 1e-6,setidx=setidxS)
@@ -253,23 +247,21 @@ for ithres in range(nthres1):
 
             E_loss = Eloss(w,D)
 
-            ##################class neutral
-
             list_cclass = []
             for im in range(m):
                 iim = im + 1
                 list_cclass.append((setidx==iim).float() +1e-6)
-                
+    
 
            
-            # ##################class neutral
+            ##################class neutral
             d_loss = 0
             if Loss == "MSE":
                 for im in range(m):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
             
             
@@ -298,13 +290,11 @@ for ithres in range(nthres1):
 
                     E_loss = Eloss(w,D)
 
-                    ##################class neutral
-
                     list_cclass = []
                     for im in range(m):
                         iim = im + 1
                         list_cclass.append((setidx==iim).float() +1e-6)
-                        
+            
 
                     
                     ##################class neutral
@@ -314,9 +304,8 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
-                    
                     
                     G_loss = lambda_Eloss * E_loss - d_loss
                     dCor_loss += G_loss.item()

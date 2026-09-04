@@ -8,7 +8,7 @@ def standardization(ddata):
     sigma = np.std(ddata, axis=0)
     return (ddata - mu) / sigma
 
-
+#idx_domain = 0 is the target dataset
 def Get_data_0101(n, P, s=1):
     Cov_z = np.eye(P)
     for k in range(P):

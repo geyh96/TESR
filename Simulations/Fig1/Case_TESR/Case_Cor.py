@@ -1,4 +1,4 @@
-
+###TESR
 import os
 import sys
 import numpy as np
@@ -6,8 +6,8 @@ import argparse
 
 def mkdir(path):
     folder = os.path.exists(path)
-    if not folder: 
-        os.makedirs(path) 
+    if not folder: #判断是否存在文件夹如果不存在则创建为文件夹
+        os.makedirs(path) #makedirs 创建文件时如果路径不存在会创建这个路径
         print("Done folder") 
     else:
         print("Folder Already")
@@ -23,7 +23,7 @@ sys.path.append("..")
 from gen_data import *
 from my_model import *
 from my_energy import *
-
+from gmdd_loss import Loss_GMDC
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--iloop', type=int, default=1)
@@ -225,6 +225,7 @@ for ithres in range(nthres1):
     
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
+    GMDCloss = Loss_GMDC()
 
     #########################################################################
     #########################################################################
@@ -262,7 +263,7 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
             if Loss == "BCE":
                 Y2 = 1 - Yi
@@ -272,7 +273,7 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
 
             G_loss = lambda_Eloss * E_loss - d_loss
@@ -312,7 +313,7 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     if Loss == "BCE":
                         Y2 = 1 - Yi
@@ -322,7 +323,7 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     
                     G_loss = lambda_Eloss * E_loss - d_loss
@@ -392,7 +393,7 @@ for ithres in range(nthres2):
     
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-
+    GMDCloss = Loss_GMDC()
 
     #########################################################################
     #########################################################################
@@ -420,7 +421,7 @@ for ithres in range(nthres2):
             w, _ = net_Target(Xi)
             w_prior = w_prior.detach()
             Rx = torch.cat((w_prior,w),dim=1)
-            D_loss = DCloss(Yi, Rx)
+            D_loss = GMDCloss(Rx, Yi)
             E_loss = Eloss(w,D)
             d_loss_prior = DCloss(w, w_prior)
             G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss
@@ -443,7 +444,7 @@ for ithres in range(nthres2):
                     w, _ = net_Target(Xi)
                     w_prior = w_prior.detach()
                     Rx = torch.cat((w_prior,w),dim=1)
-                    D_loss = DCloss(Yi, Rx)
+                    D_loss = GMDCloss(Rx, Yi)
                     E_loss = Eloss(w,D)
                     d_loss_prior = DCloss(w, w_prior)
                     G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss

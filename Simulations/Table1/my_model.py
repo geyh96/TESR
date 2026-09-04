@@ -4,6 +4,7 @@ import numpy as np
 
 
 def to_onehot(target):
+    # change the target to one-hot version
     Y = np.ravel(target.numpy()).astype(int)
     Y_train = np.zeros((Y.shape[0], Y.max()-Y.min()+1))
     Y_train[np.arange(Y.size), Y-Y.min()] = 1
@@ -44,6 +45,7 @@ class Generator(nn.Module):
             nn.LeakyReLU(0.2),
             nn.Linear(16, outdim),
         )
+        # self.fc = nn.Linear(ndim, 1)
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.Linear)):
                 nn.init.xavier_uniform_(m.weight)

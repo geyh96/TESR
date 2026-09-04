@@ -1,3 +1,4 @@
+###Regression2 Model(a)
 import os
 import sys
 import numpy as np
@@ -6,8 +7,8 @@ import argparse
 
 def mkdir(path):
     folder = os.path.exists(path)
-    if not folder: 
-        os.makedirs(path) 
+    if not folder: #判断是否存在文件夹如果不存在则创建为文件夹
+        os.makedirs(path) #makedirs 创建文件时如果路径不存在会创建这个路径
         print("Done folder") 
     else:
         print("Folder Already")
@@ -23,7 +24,7 @@ sys.path.append("..")
 from gen_data import *
 from my_model import *
 from my_energy import *
-
+from gmdd_loss import Loss_GMDC
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--iloop', type=int, default=1)
@@ -32,6 +33,7 @@ parser.add_argument('--NTarget', type=int, default=300)
 parser.add_argument('--P', type=int, default=30)
 parser.add_argument('--numS', type=int, default=2)
 parser.add_argument('--ideparture', type=int, default=0)
+# parser.add_argument('--igroup', type=int, default=0)
 line_args = parser.parse_args()
 idx_data = line_args.iloop
 NSource = line_args.NSource
@@ -48,6 +50,8 @@ args = class_args()
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
+# NSource = args.NSource
+# NTarget = args.NTarget
 NSval= int(NSource * The_val_ratio)
 
 NTval = int(NTarget * The_val_ratio)
@@ -74,6 +78,7 @@ The_DATA_MARK = "idata_" + str(idx_data) + "_ideparture_" + str(ideparture) + "_
 
 mkdir("./result")
 mkdir("./model")
+# igroup = line_args.igroup
 print("is the cuda avalable {:1d}".format(torch.cuda.is_available()))
 
 
@@ -218,7 +223,7 @@ for ithres in range(nthres1):
     
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-    
+    GMDCloss = Loss_GMDC()
 
 
     #########################################################################
@@ -254,7 +259,7 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:  
-                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
             if Loss == "BCE":
                 Y2 = 1 - Yi
@@ -264,7 +269,7 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:  
-                        d_loss_iim = DCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
             
             G_loss = lambda_Eloss * E_loss - d_loss
@@ -302,7 +307,7 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:  
-                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     if Loss == "BCE":
                         Y2 = 1 - Yi
@@ -312,7 +317,7 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     
                     G_loss = lambda_Eloss * E_loss - d_loss
@@ -378,6 +383,8 @@ for ithres in range(nthres2):
     
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
+    GMDCloss = Loss_GMDC()
+
     if args.cuda:
         net = net.cuda()
         D_net = D_net.cuda()
@@ -410,7 +417,7 @@ for ithres in range(nthres2):
             w, _ = net_Target(Xi)
             w_prior = w_prior.detach()
             Rx = torch.cat((w_prior,w),dim=1)
-            D_loss = DCloss(Yi, Rx)
+            D_loss = GMDCloss(Rx, Yi)
             E_loss = Eloss(w,D)
             d_loss_prior = DCloss(w, w_prior)
             G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss
@@ -433,7 +440,7 @@ for ithres in range(nthres2):
                     w, _ = net_Target(Xi)
                     w_prior = w_prior.detach()
                     Rx = torch.cat((w_prior,w),dim=1)
-                    D_loss = DCloss(Yi, Rx)
+                    D_loss = GMDCloss(Rx, Yi)
                     E_loss = Eloss(w,D)
                     d_loss_prior = DCloss(w, w_prior)
                     G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss

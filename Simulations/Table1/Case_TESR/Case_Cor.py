@@ -1,3 +1,4 @@
+###Regression2 Model(a)
 import os
 import sys
 import numpy as np
@@ -6,23 +7,25 @@ import argparse
 
 def mkdir(path):
     folder = os.path.exists(path)
-    if not folder: 
-        os.makedirs(path) 
+    if not folder: #判断是否存在文件夹如果不存在则创建为文件夹
+        os.makedirs(path) #makedirs 创建文件时如果路径不存在会创建这个路径
         print("Done folder") 
     else:
         print("Folder Already")
 
+# torch functions
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+
 from torch.utils.data import DataLoader, Dataset
 
 sys.path.append("..") 
 from gen_data import *
 from my_model import *
 from my_energy import *
-
+from gmdd_loss import Loss_GMDC
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--iloop', type=int, default=1)
@@ -30,6 +33,7 @@ parser.add_argument('--NSource', type=int, default=2000)
 parser.add_argument('--NTarget', type=int, default=300)
 parser.add_argument('--P', type=int, default=60)
 parser.add_argument('--dim', type=int, default=8)
+# parser.add_argument('--igroup', type=int, default=0)
 line_args = parser.parse_args()
 idx_data = line_args.iloop
 NSource = line_args.NSource
@@ -44,9 +48,13 @@ args = class_args()
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
+# NSource = args.NSource
+# NTarget = args.NTarget
 NSval= int(NSource * The_val_ratio)
+
 NTval = int(NTarget * The_val_ratio)
 m = args.m
+
 ntest = NTest
 
 print((NSource,m,NTarget))
@@ -67,6 +75,7 @@ The_DATA_MARK = "idata_" + str(idx_data) + "_NS_" + str(NSource) + "_NT_" + str(
 
 mkdir("./result")
 mkdir("./model")
+# igroup = line_args.igroup
 print("is the cuda avalable {:1d}".format(torch.cuda.is_available()))
 
 
@@ -92,6 +101,7 @@ class my_regDataset(Dataset):
     
     def __getitem__(self, idx):
         X,Rx,Y,weight,setidx = self.X[idx], self.Rx[idx], self.Y[idx], self.weight[idx], self.setidx[idx]
+        # return torch.tensor(X),torch.tensor(Rx),torch.tensor(Y),torch.tensor(setidx)
         return X,Rx,Y,weight,setidx
 
     def __len__(self):
@@ -214,7 +224,7 @@ for ithres in range(nthres1):
     
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-
+    GMDCloss = Loss_GMDC()
 
     #########################################################################
     the_dataset_train = my_regDataset(X=XS,Rx=YS,Y=YS,weight=np.ones_like(YS[:,0])+ 1e-6,setidx=setidxS)
@@ -243,15 +253,16 @@ for ithres in range(nthres1):
             for im in range(m):
                 iim = im + 1
                 list_cclass.append((setidx==iim).float() +1e-6)
+        
 
-            ##################class neutral
+
             d_loss = 0
             if Loss == "MSE":
                 for im in range(m):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
             if Loss == "BCE":
                 Y2 = 1 - Yi
@@ -261,8 +272,9 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
+            # G_loss = lambda_Eloss * E_loss - d_loss + lambda_Iloss * inva_loss
             G_loss = lambda_Eloss * E_loss - d_loss
             optimizer.zero_grad()
             G_loss.backward()
@@ -287,7 +299,6 @@ for ithres in range(nthres1):
                     w, _ = net(Xi)
                     E_loss = Eloss(w,D)
 
-                    ##################class neutral
                     list_cclass = []
                     for im in range(m):
                         iim = im + 1
@@ -300,7 +311,7 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     if Loss == "BCE":
                         Y2 = 1 - Yi
@@ -310,7 +321,7 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], YY[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     G_loss = lambda_Eloss * E_loss - d_loss
                     dCor_loss += G_loss.item()
@@ -378,7 +389,7 @@ for ithres in range(nthres2):
     
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-
+    GMDCloss = Loss_GMDC()
 
     #########################################################################
     #########################################################################
@@ -405,7 +416,7 @@ for ithres in range(nthres2):
             w, _ = net_Target(Xi)
             w_prior = w_prior.detach()
             Rx = torch.cat((w_prior,w),dim=1)
-            D_loss = DCloss(Yi, Rx)
+            D_loss = GMDCloss(Rx, Yi)
             E_loss = Eloss(w,D)
             d_loss_prior = DCloss(w, w_prior)
             G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss
@@ -428,7 +439,7 @@ for ithres in range(nthres2):
                     w, _ = net_Target(Xi)
                     w_prior = w_prior.detach()
                     Rx = torch.cat((w_prior,w),dim=1)
-                    D_loss = DCloss(Yi, Rx)
+                    D_loss = GMDCloss(Rx, Yi)
                     E_loss = Eloss(w,D)
                     d_loss_prior = DCloss(w, w_prior)
                     G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss

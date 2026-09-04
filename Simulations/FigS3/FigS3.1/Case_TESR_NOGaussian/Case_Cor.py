@@ -12,6 +12,7 @@ def mkdir(path):
     else:
         print("Folder Already")
 
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -22,7 +23,7 @@ sys.path.append("..")
 from gen_data import *
 from my_model import *
 from my_energy import *
-
+from gmdd_loss import Loss_GMDC
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--iloop', type=int, default=7)
@@ -39,6 +40,8 @@ P = line_args.P
 
 from itertools import product
 args = class_args()
+
+
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
@@ -46,7 +49,6 @@ NSval= int(NSource * The_val_ratio)
 NTval = int(NTarget * The_val_ratio)
 m = args.m
 ntest = NTest
-
 print((NSource,m,NTarget))
 
 
@@ -104,6 +106,7 @@ def Totensor(x, device):
 
 
 
+
 ########################################################################
 list_XS = []
 list_YS = []
@@ -119,6 +122,7 @@ for s in range(m):
     list_XS.append(Xss)
     list_YS.append(yss)
     list_setidxS.append(setidxss)
+
 
 
 XS = np.concatenate(list_XS,axis=0)
@@ -144,9 +148,11 @@ for s in range(0,m):
 
 
 
+
 XSval = np.concatenate(list_XSval,axis=0)
 YSval = np.concatenate(list_YSval,axis=0)
 setidxSval = np.concatenate(list_setidxSval,axis=0)
+
 
 
 
@@ -175,6 +181,7 @@ if 1:
     setidxtest = np.ones_like(YTtest)*s
 
 #############################################################################
+
 
 
 if args.cuda:
@@ -212,10 +219,12 @@ for ithres in range(nthres1):
 
     net = Generator(xdim = P, ndim = args.latent_dim, outdim = 2)
     optimizer = optim.RMSprop(net.parameters(),lr=args.lr_R, weight_decay=1e-4)
-  
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer,step_size=args.lr_step, gamma=args.decayRate)
+    
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-    
+    GMDCloss = Loss_GMDC()
+    #########################################################################
     #########################################################################
     the_dataset_train = my_regDataset(X=XS,Rx=YS,Y=YS,weight=np.ones_like(YS[:,0])+ 1e-6,setidx=setidxS)
     the_dataset_val = my_regDataset(X=XSval,Rx=YSval,Y=YSval,weight=np.ones_like(YSval[:,0])+ 1e-6,setidx=setidxSval)
@@ -230,22 +239,21 @@ for ithres in range(nthres1):
             X = torch.squeeze(X,dim=0)
             Y = torch.squeeze(Y,dim=0)
             Rx = torch.squeeze(Rx,dim=0)
-            
-            Xi, Yi = X.to(device),Y.to(device)
+            setidx = torch.squeeze(setidx,dim=0)
+            Xi, Yi, setidxi = X.to(device),Y.to(device),setidx.to(device)
             D = torch.randn(Yi.shape[0], args.latent_dim).to(device)
             w, _ = net(Xi)
 
 
             E_loss = Eloss(w,D)
 
-
             list_cclass = []
             for im in range(m):
                 iim = im + 1
                 list_cclass.append((setidx==iim).float() +1e-6)
-                
+    
 
-            
+           
             ##################class neutral
             d_loss = 0
             if Loss == "MSE":
@@ -253,10 +261,9 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
-
-           
+            
             G_loss = lambda_Eloss * E_loss - d_loss
             optimizer.zero_grad()
             G_loss.backward()
@@ -274,10 +281,11 @@ for ithres in range(nthres1):
                     X = torch.squeeze(X,dim=0)
                     Y = torch.squeeze(Y,dim=0)
                     Rx = torch.squeeze(Rx,dim=0)
-                   
-                    Xi, Yi = X.to(device),Y.to(device)
+                    setidx = torch.squeeze(setidx,dim=0)
+                    Xi, Yi, setidxi = X.to(device),Y.to(device),setidx.to(device)
                     D = torch.randn(Yi.shape[0], args.latent_dim).to(device)
                     w, _ = net(Xi)
+
 
                     E_loss = Eloss(w,D)
 
@@ -285,9 +293,9 @@ for ithres in range(nthres1):
                     for im in range(m):
                         iim = im + 1
                         list_cclass.append((setidx==iim).float() +1e-6)
-                        
+            
 
-
+                    
                     ##################class neutral
                     d_loss = 0
                     if Loss == "MSE":
@@ -295,15 +303,14 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
-
                     
                     G_loss = lambda_Eloss * E_loss - d_loss
                     dCor_loss += G_loss.item()
             dCor_loss /= len(Loader_val)
             if epoch % 10==0:
-                print('\nEpoch {}: Test set: dCor_loss: {:.4f}'.format(epoch ,dCor_loss))
+                print('\nEpoch {}: Test set: dCor_loss: {:.4f}'.format(epoch, dCor_loss))
             dCorloss_iepoch = dCor_loss
             ############################################################
             ############################################################
@@ -345,7 +352,7 @@ for ithres in range(nthres2):
     print("ithres {:4f} in all nthres {:4f}".format(ithres,len(list_tuning)))
     dCorloss_best = 1e5
 
-    
+
     the_tuning_params = list_tuning[ithres]
     lambda_pred = 1
     lambda_prior = 1
@@ -362,10 +369,11 @@ for ithres in range(nthres2):
                     {"params":net_Target.parameters(),"lr":args.lr_R, "weight_decay":1e-4},
                     ]
                 )
-       
+    lr_schedulerT = torch.optim.lr_scheduler.StepLR(optimizer=optimizerT,step_size=args.lr_step, gamma=args.decayRate)
+    
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-
+    GMDCloss = Loss_GMDC()
 
     #########################################################################
     #########################################################################
@@ -386,14 +394,14 @@ for ithres in range(nthres2):
             X = torch.squeeze(X,dim=0)
             Y = torch.squeeze(Y,dim=0)
             Rx = torch.squeeze(Rx,dim=0)
-    
-            Xi, Yi = X.to(device),Y.to(device)
+            
+            Xi, Yi, setidxi = X.to(device),Y.to(device),setidx.to(device)
             D = torch.randn(Yi.shape[0], args.latent_dim).to(device)
             w_prior, _ = net(Xi)
             w, _ = net_Target(Xi)
             w_prior = w_prior.detach()
             Rx = torch.cat((w_prior,w),dim=1)
-            D_loss = DCloss(Yi, Rx)
+            D_loss = GMDCloss(Rx, Yi)
             E_loss = Eloss(w,D)
             d_loss_prior = DCloss(w, w_prior)
             G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss
@@ -409,14 +417,14 @@ for ithres in range(nthres2):
                     X = torch.squeeze(X,dim=0)
                     Y = torch.squeeze(Y,dim=0)
                     Rx = torch.squeeze(Rx,dim=0)
-            
-                    Xi, Yi = X.to(device),Y.to(device)
+                    
+                    Xi, Yi, setidxi = X.to(device),Y.to(device),setidx.to(device)
                     D = torch.randn(Yi.shape[0], args.latent_dim).to(device)
                     w_prior, _ = net(Xi)
                     w, _ = net_Target(Xi)
                     w_prior = w_prior.detach()
                     Rx = torch.cat((w_prior,w),dim=1)
-                    D_loss = DCloss(Yi, Rx)
+                    D_loss = GMDCloss(Rx, Yi)
                     E_loss = Eloss(w,D)
                     d_loss_prior = DCloss(w, w_prior)
                     G_loss =  -1*D_loss  +  lambda_prior* d_loss_prior  + lambda_Eloss*E_loss
@@ -425,7 +433,7 @@ for ithres in range(nthres2):
             loss_iepoch = loss
             if epoch %10==0:
                 print("Val" +'Epoch {}: predict_MSE: {:.4f}'.format(epoch, loss))
-            ###########################################
+
             if loss_iepoch < loss_best:
                 error_val_dCor2[ithres] = loss_iepoch
                 print("Update Best Model In Epoch:{:4f} with val pdCor: {:4f}".format(epoch,loss_iepoch))
@@ -480,7 +488,7 @@ for epoch in range(args.nEpochs_pred):
         X = torch.squeeze(X,dim=0)
         Y = torch.squeeze(Y,dim=0)
         Rx = torch.squeeze(Rx,dim=0)
-        Xi, Yi = X.to(device),Y.to(device)
+        Xi, Yi, setidxi = X.to(device),Y.to(device),setidx.to(device)
         D = torch.randn(Yi.shape[0], args.latent_dim).to(device)
         w1, _ = net(Xi)
         w2, _ = net2(Xi)
@@ -513,7 +521,7 @@ for epoch in range(args.nEpochs_pred):
                 loss = loss + lossi
         loss = loss / len(Loader_val)
         loss_iepoch = loss
-        if epoch %5==0:
+        if epoch %10==0:
             print("Val" +'Epoch {}: predict_MSE: {:.4f}'.format(epoch, loss))
         ###########################################
 
@@ -540,12 +548,9 @@ with torch.no_grad():
 
 
 
-
-
 out = F.log_softmax(y_pred, dim=0)
 y_indpred = torch.max(out ,1)[1]
 y_indpred = torch.max(y_pred ,1)[1]
-
 
 
 

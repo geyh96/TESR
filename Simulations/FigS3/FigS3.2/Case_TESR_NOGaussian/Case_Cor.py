@@ -12,16 +12,18 @@ def mkdir(path):
     else:
         print("Folder Already")
 
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
 sys.path.append("..") 
 from gen_data import *
 from my_model import *
 from my_energy import *
-
+from gmdd_loss import Loss_GMDC
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--iloop', type=int, default=7)
@@ -38,6 +40,8 @@ P = line_args.P
 
 from itertools import product
 args = class_args()
+
+
 nsample = NTarget
 NTest = args.NTest
 The_val_ratio = 0.3
@@ -103,7 +107,6 @@ def Totensor(x, device):
 
 
 
-
 ########################################################################
 list_XS = []
 list_YS = []
@@ -153,12 +156,7 @@ setidxSval = np.concatenate(list_setidxSval,axis=0)
 
 
 
-##########################################################
-##########################################################
-##########################################################
-##########################################################
-##########################################################
-##########################################################
+
 ##########################################################
 if 0:
     s = 0
@@ -183,6 +181,7 @@ if 0:
     setidxtest = np.ones_like(YTtest)*s
 
 #############################################################################
+
 
 
 if args.cuda:
@@ -212,7 +211,7 @@ for ithres in range(nthres1):
     print("ithres:{:4f}".format(ithres))
     dCorloss_best = 1e5
     loss_best = 1e5
-    
+
     lambda_Iloss = 1
     lambda_Eloss = 0
 
@@ -220,11 +219,11 @@ for ithres in range(nthres1):
 
     net = Generator(xdim = P, ndim = args.latent_dim, outdim = 2)
     optimizer = optim.RMSprop(net.parameters(),lr=args.lr_R, weight_decay=1e-4)
-    
+
+
     DCloss = Loss_DC()
     Eloss = Loss_Energy()
-  
-  
+    GMDCloss = Loss_GMDC()
     #########################################################################
     #########################################################################
     the_dataset_train = my_regDataset(X=XS,Rx=YS,Y=YS,weight=np.ones_like(YS[:,0])+ 1e-6,setidx=setidxS)
@@ -248,13 +247,13 @@ for ithres in range(nthres1):
 
             E_loss = Eloss(w,D)
 
-            
             list_cclass = []
             for im in range(m):
                 iim = im + 1
                 list_cclass.append((setidx==iim).float() +1e-6)
-                
-            
+    
+
+           
             ##################class neutral
             d_loss = 0
             if Loss == "MSE":
@@ -262,13 +261,15 @@ for ithres in range(nthres1):
                     iim = im + 1
                     ind_iim = torch.where(setidx==iim)[0]
                     if len(ind_iim)>0:
-                        d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                        d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                         d_loss = d_loss + d_loss_iim
+            
             
             G_loss = lambda_Eloss * E_loss - d_loss
             optimizer.zero_grad()
             G_loss.backward()
             optimizer.step()
+
 
 
         if epoch % 1==0:
@@ -289,14 +290,13 @@ for ithres in range(nthres1):
 
                     E_loss = Eloss(w,D)
 
-                    
                     list_cclass = []
                     for im in range(m):
                         iim = im + 1
                         list_cclass.append((setidx==iim).float() +1e-6)
-                        
-                    cclass = torch.cat(list_cclass,dim=1)
-                    inva_loss = DCloss(w, cclass.to(device))
+            
+
+                    
                     ##################class neutral
                     d_loss = 0
                     if Loss == "MSE":
@@ -304,14 +304,14 @@ for ithres in range(nthres1):
                             iim = im + 1
                             ind_iim = torch.where(setidx==iim)[0]
                             if len(ind_iim)>0:
-                                d_loss_iim = DCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
+                                d_loss_iim = GMDCloss(w[ind_iim,:], Yi[ind_iim,:].to(device))
                                 d_loss = d_loss + d_loss_iim
                     
                     G_loss = lambda_Eloss * E_loss - d_loss
                     dCor_loss += G_loss.item()
             dCor_loss /= len(Loader_val)
             if epoch % 10==0:
-                print('\nEpoch {}: Test set: dCor_loss: {:.4f}'.format(epoch ,dCor_loss))
+                print('\nEpoch {}: Test set: dCor_loss: {:.4f}'.format(epoch, dCor_loss))
             dCorloss_iepoch = dCor_loss
             ############################################################
             ############################################################
@@ -390,7 +390,6 @@ RxTval = YTval.astype(np.float32)
 setidxTval = np.ones_like(YTval)*s
 
 DataT_test.keys()
-# XTtest = DataT_test["X"]
 XT0 = DataT_test["X"]
 XTtest,_ = net(torch.tensor(XT0))
 XTtest = XTtest.detach().numpy().astype(np.float32)
@@ -440,17 +439,15 @@ for epoch in range(args.nEpochs):
                 X = torch.squeeze(X,dim=0)
                 X = X.to(device)
                 Y = torch.squeeze(Y,dim=0)
-
                 Y = Y.to(device)
                 output = f1_pred_from_Rx(X)
                 lossi = MSEloss(output.squeeze(),Y.squeeze())  
                 loss = loss + lossi
         loss = loss / len(Loader_val)
         loss_iepoch = loss
-        if epoch %5 ==0:
+        if epoch %10 ==0:
             print("Val"+'Epoch {}: predict_MSE: {:.4f}'.format(epoch, loss))
         ##################################################################
- 
         if loss_iepoch < loss_best:
             error_val_dCor2[ithres] = loss_iepoch
             print("Update Best Model In Epoch:{:4f} with val loss PRED: {:4f}".format(epoch,loss_iepoch))
@@ -481,4 +478,3 @@ with open(os.path.join(args.save_pickle,  "Result_" + The_DATA_MARK  + "_Model_"
     pickle.dump(
         res
         , handle, protocol=pickle.HIGHEST_PROTOCOL)
-

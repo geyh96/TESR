@@ -7,6 +7,7 @@ def standardization(ddata):
     sigma = np.std(ddata, axis=0)
     return (ddata - mu) / sigma
 
+#idx_domain = 0 is the target dataset
 def Get_data_0101(n, P, s=1):
     Cov_z = np.eye(P)
     for k in range(P):
@@ -45,8 +46,9 @@ def Get_data_0101(n, P, s=1):
 
 
     if s == 0:
-
+        # mu0 =  2*f0 + 1*f1 + 1*f2  + 1*f5
         mu0 =  2*f0 + 1*f1 + 1*f2 + 1*f3
+        # eps = np.random.randn(n)
         y0 = mu0 - mu0.mean()
         y0 = y0.reshape(-1,1)
         y0 = y0.astype(np.float32)
@@ -65,7 +67,7 @@ def Get_data_0101(n, P, s=1):
         y1 = y1.reshape(-1,1).astype(np.float32)
         y = y1
 
-
+    # if s==4 or s==5 or s==6:
     if s==4 or s==3:
         ss = s - 2
         mu1  = 2*f0 + 1.5*f1 + 1*f2  + ss*f5
